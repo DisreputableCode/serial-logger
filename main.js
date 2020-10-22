@@ -1,13 +1,9 @@
 const SerialPort = require('serialport')
 const fs = require('fs')
-const argv = require('minimist')(process.argv.slice(2));
+const argv = require('minimist')(process.argv.slice(2))
 
 class Log {
-    constructor(fn=undefined) {
-        if (!fn) {
-            const now = new Date()
-            fn = now.toISOString()
-        }
+    constructor(fn='serial') {
         fn += '.log.csv'
         this.stream = fs.createWriteStream(fn, {flags:'a'})
     }
@@ -22,15 +18,16 @@ class Log {
 
 const main = async (baud=9600) => {
     const log = new Log()
+    log.writeLine('logger starting')
     SerialPort.list().then(ports => {
         ports.forEach((port) => {
             const p = new SerialPort(port.path, {baudRate:baud}, (err) => {
                 if (err) {
-                    log.writeLine('Unable to open port ' + port.path)
+                    log.writeLine('unable to open port ' + port.path + ': ' + err)
                 } else {
-                    log.writeLine("Opened port " + port.path)
-                    p.on('data', function (data) {
-                        log.writeLine(port.path + ',' + data, port=port.path)
+                    log.writeLine("opened port " + port.path)
+                    p.on('data', function(data) {
+                        log.writeLine(data.toString('hex'), port=p.path)
                     })
                 }
             })
@@ -39,4 +36,3 @@ const main = async (baud=9600) => {
 }
 
 main(argv.baud)
-
