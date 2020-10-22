@@ -1,41 +1,42 @@
 const SerialPort = require('serialport')
 const fs = require('fs')
+const argv = require('minimist')(process.argv.slice(2));
 
-const openAllPorts = async (baud) => {
-    return new Promise(resolve => {
-        var serialPorts = []
-        SerialPort.list().then(ports => {
-            ports.forEach((port) => {
-                serialPorts.push(new SerialPort(port.path, {baudRate:baud}))
-                resolve(serialPorts)
-            })
-        })
-    })
-}
-
-const logFile = async () => {
-    return new Promise(resolve => {
-        const now = new Date()
-        const fn = 'log ' + now.toISOString() + '.csv'
-        var file = fs.createWriteStream(fn, {flags:'a'})
-        resolve(file)
-    })
-}
-
-const main = async () => {
-    const log = await logFile()
-    const ports = await openAllPorts(9600)
-
-    ports.forEach((port) => {
-        port.on('data', function (data) {
+class Log {
+    constructor(fn=undefined) {
+        if (!fn) {
             const now = new Date()
-            const line = now.toISOString() + ',' + port.path + ',' + data
-            stream.write(line + '\n')
-            console.log(line)
-        })
-        console.log("Listening to " + port.path)
+            fn = now.toISOString()
+        }
+        fn += '.log.csv'
+        this.stream = fs.createWriteStream(fn, {flags:'a'})
+    }
+
+    writeLine(msg, port='system', consoleLog=true) {
+        const now = new Date()
+        const line = now.toISOString() + ',' + port + ',' + msg
+        this.stream.write(line + '\n')
+        if (consoleLog) console.log(line)
+    }
+}
+
+const main = async (baud=9600) => {
+    const log = new Log()
+    SerialPort.list().then(ports => {
+        ports.forEach((port) => {
+            const p = new SerialPort(port.path, {baudRate:baud}, (err) => {
+                if (err) {
+                    log.writeLine('Unable to open port ' + port.path)
+                } else {
+                    log.writeLine("Opened port " + port.path)
+                    p.on('data', function (data) {
+                        log.writeLine(port.path + ',' + data, port=port.path)
+                    })
+                }
+            })
+        })  
     })
 }
 
-main()
+main(argv.baud)
 
