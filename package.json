@@ -1,0 +1,23 @@
+{
+  "name": "serial-logger",
+  "version": "1.0.0",
+  "description": "serial-logger",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danelewis/serial-logger.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/danelewis/serial-logger/issues"
+  },
+  "homepage": "https://github.com/danelewis/serial-logger#readme",
+  "dependencies": {
+    "serialport": "^9.0.2"
+  }
+}
